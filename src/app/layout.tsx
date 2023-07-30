@@ -14,13 +14,6 @@ export const metadata: Metadata = {
   },
   description: siteConfig.metadata.description,
   themeColor: '#ffffff',
-  openGraph: {
-    title: siteConfig.metadata.name,
-    description: siteConfig.metadata.description,
-    siteName: siteConfig.metadata.name,
-    locale: 'ja-JP',
-    type: 'website',
-  },
 }
 
 export default function RootLayout({
