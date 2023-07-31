@@ -15,7 +15,7 @@ export function PageSelect({ size }: { size: number }) {
     <div className='flex justify-end'>
       <Select
         defaultValue={`${currentPage}`}
-        onValueChange={(v) => router.replace(`/?page=${v}`)}
+        onValueChange={(v) => router.replace(`/?page=${v}`, { scroll: false })}
       >
         <SelectTrigger className='w-40'>
           <SelectValue placeholder='表示するページ'/>
