@@ -4,4 +4,6 @@ export type SiteConfig = {
     description: string,
     url: string,
   } 
+  guildId: string,
+  inviteUrl: string,
 }
