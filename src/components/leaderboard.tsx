@@ -7,7 +7,6 @@ import { Progress } from './ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { FadeUpCard, FadeUpDiv, FadeUpStagger } from './animation';
 import { PageSelect } from './page-selects';
-import { ScrollToTopButton } from './scroll-to-top-button';
 
 export async function LeaderBoard({ skip }: { skip: number }) {
   await dbConnect();
@@ -17,16 +16,16 @@ export async function LeaderBoard({ skip }: { skip: number }) {
     ...v,
     user: await fetch(
       `https://discord.com/api/v10/users/${v.id}`,
-      { headers: { Authorization: `Bot ${process.env.BOT_TOKEN!}` }, next: { revalidate: 2 * 60 * 60 }, }
+      { headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` }, next: { revalidate: 2 * 60 * 60 }, }
     ).then(async (res) => {
       await wait(100);
       return await res.json<APIUser>()
     }),
-  })))
+  })));
 
   return (
     <FadeUpStagger className='flex flex-col gap-6'>
-      <FadeUpDiv className='flex justify-end'>
+      <FadeUpDiv className='flex justify-end items-center'>
         <PageSelect size={modelSize}/>
       </FadeUpDiv>
       <div className='flex flex-col gap-4'>
@@ -43,7 +42,7 @@ export async function LeaderBoard({ skip }: { skip: number }) {
             >
               {rank}
             </div>
-            <div className='flex-1 flex justify-between items-center'>
+            <div className='flex-1 flex flex-col md:flex-row sm:justify-normal md:justify-between md:items-center'>
               <div className='flex gap-4 items-center'>
                 <Avatar className='w-8 h-8'>
                   <AvatarImage src={user.avatar ? `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.png'}/>
@@ -64,9 +63,9 @@ export async function LeaderBoard({ skip }: { skip: number }) {
                   </div>
                 )} 
               </div>
-              <div className='flex flex-col items-end gap-2'>
+              <div className='flex items-center md:flex-col md:items-end gap-2'>
                 <p className='text-muted-foreground'>Lv.<span className='text-foreground font-extrabold'>{lv}</span></p>
-                <Progress className='w-20 lg:w-40 h-1' value={Math.floor((xp / getNeedXP(lv)) * 100)}/>
+                <Progress className='flex-1 md:flex-none md:w-40 h-1' value={Math.floor((xp / getNeedXP(lv)) * 100)}/>
               </div>
             </div>
           </FadeUpCard>

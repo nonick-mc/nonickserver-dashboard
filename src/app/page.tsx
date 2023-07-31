@@ -1,7 +1,9 @@
+import React, { Suspense } from 'react';
 import { LeaderBoard } from '@/components/leaderboard';
+import { LevelCardSkelton } from '@/components/level-card-skelton';
+import { MyLevelCard } from '@/components/my-level-card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Suspense } from 'react';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai'
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home({ searchParams: { page } }: { searchParams: { page: string } }) {
   return (
@@ -18,14 +20,33 @@ export default function Home({ searchParams: { page } }: { searchParams: { page:
         </div>
       </div>
 
-      <div className='py-12 mx-auto'>
-        <Suspense fallback={(
-          <div className='flex py-20 justify-center'>
-            <AiOutlineLoading3Quarters className='animate-spin' size={30}/>
-          </div>
-        )}>
-          <LeaderBoard skip={((Number(page) || 1) - 1) * 50}/>
-        </Suspense>
+      <div className='py-12 mx-auto flex flex-col gap-12'>
+        <div className='flex flex-col gap-6'>
+          <h3 className='font-black text-2xl'>あなたの順位</h3>
+          <Suspense fallback={(<LevelCardSkelton/>)}>
+            <MyLevelCard/>
+          </Suspense>
+        </div>
+        <div className='flex flex-col gap-6'>
+          <h3 className='font-black text-2xl'>みんなの順位</h3>
+          <Suspense fallback={(
+            <React.Fragment>
+              <div className='flex justify-end'>
+                <Skeleton className='w-40 h-10'/>
+              </div>
+              <div className='flex flex-col gap-4'>
+                <LevelCardSkelton/>
+                <LevelCardSkelton className='opacity-80'/>
+                <LevelCardSkelton className='opacity-60'/>
+                <LevelCardSkelton className='opacity-40'/>
+                <LevelCardSkelton className='opacity-20'/>
+                <LevelCardSkelton className='opacity-5'/>
+              </div>
+            </React.Fragment>
+          )}>
+            <LeaderBoard skip={((Number(page) || 1) - 1) * 50}/>
+          </Suspense>
+        </div>
       </div>
     </main>
   );

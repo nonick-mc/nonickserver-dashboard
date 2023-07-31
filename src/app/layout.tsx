@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import type { Metadata } from 'next'
 import { Noto_Sans_JP } from 'next/font/google'
 import { siteConfig } from '@/config/site'
+import { NextAuthProvider } from '@/components/session-provider'
 
 const notoSans = Noto_Sans_JP({ subsets: ['latin'] })
 
@@ -24,11 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={notoSans.className}>
-        <AnimationProvider>
-          <ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
-            {children}
-          </ThemeProvider>
-        </AnimationProvider>
+        <NextAuthProvider>
+          <AnimationProvider>
+            <ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
+              {children}
+            </ThemeProvider>
+          </AnimationProvider>
+        </NextAuthProvider>
       </body>
     </html>
   )

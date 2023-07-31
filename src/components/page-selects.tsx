@@ -21,7 +21,7 @@ export function PageSelect({ size }: { size: number }) {
           <SelectValue placeholder='表示するページ'/>
         </SelectTrigger>
         <SelectContent>
-          <ScrollArea className='h-[300px]'>
+          <ScrollArea className='h-[250px]'>
             {Array(Math.ceil(size / 50)).fill(0).map((v, index) => (
               <SelectItem value={`${index + 1}`} key={index}>
                 ページ{index + 1}
