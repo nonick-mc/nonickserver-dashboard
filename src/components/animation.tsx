@@ -9,25 +9,29 @@ const FADE_UP_ANIMATION_VARIANTS = {
   show: { opacity: 1, y: 0, transition: { type: 'spring' } },
 };
 
-const FadeUpStagger = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <motion.div
-      initial='hidden'
-      animate='show'
-      viewport={{ once: true }}
-      variants={{
-        hidden: {},
-        show: {
-          transition: {
-            staggerChildren: 0.1,
-          },
+
+const FadeUpStagger = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLAnchorElement>
+>(({ className, children }, ref) => (
+  <motion.div
+    initial='hidden'
+    animate='show'
+    className={className}
+    // viewport={{ once: true }}
+    variants={{
+      hidden: {},
+      show: {
+        transition: {
+          staggerChildren: 0.1,
         },
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+      },
+    }}
+  >
+    {children}
+  </motion.div>
+));
+FadeUpStagger.displayName = 'FadeUpStagger';
 
 const FadeUpDiv = React.forwardRef<
   HTMLDivElement,
