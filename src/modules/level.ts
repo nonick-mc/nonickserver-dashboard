@@ -42,13 +42,21 @@ export function getMemberLv(lv: number): { before: MemberData | null, current: M
   return { before, current };
 }
 
-export async function getLevelData(...pipeline: PipelineStage[]) {
+export type LevelData = {
+  id: string;
+  lv: number;
+  xp: number;
+  boost: number;
+  last: Date;
+  rank: number;
+}
+export async function getLevelData(...pipeline: PipelineStage[]): Promise<(LevelData & { rank: number })[]> {
   return (await levelModel.aggregate([
     { $addFields: { score: { lv: '$lv', xp: '$xp' } } },
     {
       $setWindowFields: {
         sortBy: { score: -1 },
-        output: { rank: { $denseRank: {} } },
+        output: { rank: { $rank: {} } },
       },
     },
     ...pipeline,
