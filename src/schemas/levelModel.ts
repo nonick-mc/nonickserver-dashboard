@@ -21,6 +21,6 @@ export const levelSchema = new Schema<ILevelSchema>({
 levelSchema.index({ id: 1 }, { name: 'id', unique: true });
 levelSchema.index({ lv: -1, xp: -1 }, { name: 'level' });
 
-export default models.levels
+export default models?.levels
   ? (models.levels as Model<ILevelSchema>)
   : model<ILevelSchema, Model<ILevelSchema>>('levels', levelSchema);
