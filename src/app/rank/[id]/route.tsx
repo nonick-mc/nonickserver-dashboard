@@ -5,7 +5,6 @@ import { getAvatarIndex, getDisplayUserAvatar, getMember, getMemberHoistRole } f
 import { siteConfig } from '@/config/site';
 
 const MPlus = await fetch(`${siteConfig.metadata.url}/rank/MPLUS-1P-BOLD.ttf`).then(v => v.arrayBuffer());
-const Blank = await fetch(`https://raw.githubusercontent.com/adobe-fonts/adobe-blank/master/AdobeBlank.ttf`).then(v => v.arrayBuffer());
 
 function siUnit(num: number, method: (n: number) => number = Math.floor) {
   if (num <= 0) return String(num);
@@ -29,7 +28,7 @@ export async function GET(_: any, { params: { id } }: { params: { id: string } }
     (
       <div style={{
         display: 'flex', width: '100%', height: '100%',
-        color: '#fff', fontFamily: 'MPlus, Blank',
+        color: '#fff', fontFamily: 'MPlus',
       }}>
         <img src={`${siteConfig.metadata.url}/rank/${getAvatarIndex(member.user)}.png`} style={{ width: '100%', height: '100%' }} />
         <div style={{ position: 'absolute', top: '50%', width: '100%', height: '50%', backgroundColor: '#1b1b1f' }} />
@@ -70,8 +69,7 @@ export async function GET(_: any, { params: { id } }: { params: { id: string } }
       width: 750,
       height: 300,
       fonts: [
-        { name: 'MPlus', data: MPlus },
-        { name: 'Blank', data: Blank },
+        { name: 'MPlus', data: MPlus }
       ]
     }
   );
