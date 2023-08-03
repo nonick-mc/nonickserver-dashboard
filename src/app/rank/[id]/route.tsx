@@ -61,7 +61,7 @@ export async function GET(_: any, { params: { id } }: { params: { id: string } }
           position: 'absolute', left: '230px', bottom: '60px',
           backgroundColor: '#454952', borderRadius: '35px', border: '5px #232529',
         }}>
-          <div style={{ width: `${(data.xp / need) * 100}%`, borderRadius: '25px', backgroundColor: hoist?.color ? `#${hoist.color.toString(16)}` : '#fff' }} />
+          <div style={{ width: `${(data.xp / need) * 100}%`, borderRadius: '25px', backgroundColor: hoist?.color ? `#${hoist.color.toString(16).padStart(6, '0')}` : '#fff' }} />
         </div>
       </div>
     ),
