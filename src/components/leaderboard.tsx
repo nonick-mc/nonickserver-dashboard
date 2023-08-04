@@ -29,7 +29,7 @@ export async function LeaderBoard({ skip }: { skip: number }) {
         <PageSelect size={modelSize}/>
       </FadeUpDiv>
       <div className='flex flex-col gap-4'>
-        {userLevelData.map(({ id, xp, lv, rank, user }, index) => (
+        {userLevelData.filter(({ boost }) => boost > 0 ).map(({ id, xp, lv, rank, user }, index) => (
           <FadeUpCard
             className='px-6 py-4 flex gap-4 items-center'
             key={index}
