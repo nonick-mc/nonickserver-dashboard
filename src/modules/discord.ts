@@ -22,10 +22,9 @@ export default class Discord {
 
   set(id: string, data: Partial<UserData>) {
     const cache = this.cache.get(id);
-    const after = cache ? { ...cache, ...data } : data;
+    const after = cache ? Object.assign(cache, data) : data;
     this.cache.set(id, after);
-    console.info(`[${id}] update cache`);
-    console.info(this.cache);
+    console.info(`[${id}] update cache`, after);
     return after;
   }
 
