@@ -1,91 +1,88 @@
 import { siteConfig } from "@/config/site";
+import userModel, { IUserSchema } from "@/schemas/userModel";
 import { APIGuildMember, APIRole, APIUser } from "discord-api-types/v10";
 
-export interface UserData {
-  id: string;
-  avatar: string;
-  name: string;
-  global_name: string | null;
-  discriminator: string;
-  role_color: number;
-}
-
-export default class Discord {
-  private cache: Map<string, Partial<UserData>>;
-  private constructor() {
-    this.cache = new Map();
-  }
-
-  get(id: string) {
-    return this.cache.get(id);
-  }
-
-  set(id: string, data: Partial<UserData>) {
-    const cache = this.cache.get(id);
-    const after = cache ? Object.assign(cache, data) : data;
-    this.cache.set(id, after);
-    console.info(`[${id}] update cache`, after);
-    return after;
-  }
-
-  static readonly cache = new Discord();
-  static async fetch(id: string): Promise<UserData> {
-    const cache = this.cache.get(id);
-    if (this.isUserData(cache)) {
-      console.info(`[${id}] use cache`);
-      return cache;
+export namespace Discord {
+  export async function fetch(id: string): Promise<IUserSchema> {
+    const doc = await userModel.findOne({ id });
+    if (!doc) {
+      const userData = await getUserData(id).catch(console.error);
+      const memberData = await getMemberData(id).catch(console.error);
+      return lean(await new userModel({ id, ...userData, ...memberData }).save({ wtimeout: 1500 }));
     }
-    const userData = { id, ...(await this.getUserData(id)), ...(await this.getMemberData(id)) }
-    this.cache.set(id, userData);
-    return userData;
+    if (!doc.color) {
+      const memberData = await getMemberData(id).catch(console.error);
+      if (memberData) {
+        doc.color = memberData.color;
+      }
+    }
+    if (!(
+      doc.avatar &&
+      doc.discriminator &&
+      doc.username
+    )) {
+      const userData = await getUserData(id).catch(console.error);
+      if (userData) {
+        doc.avatar = userData.avatar;
+        doc.discriminator = userData.discriminator;
+        doc.username = userData.username;
+        doc.globalName = userData.globalName;
+      }
+    }
+    return lean(await doc.save({ wtimeout: 1500 }));
   }
 
-  static getAvatarIndex({ id, discriminator }: Pick<UserData, 'id' | 'discriminator'>) {
-    return discriminator === '0' ? Number(BigInt(id) >> 22n) % 6 : Number(discriminator) % 5;
+  function lean(doc: IUserSchema): IUserSchema {
+    return {
+      avatar: doc.avatar,
+      discriminator: doc.discriminator,
+      id: doc.id,
+      username: doc.username,
+      color: doc.color,
+      globalName: doc.globalName,
+    };
   }
 
-  private static isUserData(data?: Partial<UserData>): data is UserData {
-    return (
-      typeof data?.avatar === 'string' &&
-      typeof data?.discriminator === 'string' &&
-      typeof data?.global_name === 'string' &&
-      typeof data?.id === 'string' &&
-      typeof data?.name === 'string' &&
-      typeof data?.role_color === 'number'
-    );
-  }
-
-  private static async getUserData(id: string): Promise<Pick<UserData, 'avatar' | 'discriminator' | 'global_name' | 'name'>> {
-    const user = await this.discordFetch<APIUser>(`users/${id}`);
+  async function getUserData(id: string): Promise<Pick<IUserSchema, 'avatar' | 'discriminator' | 'globalName' | 'username'>> {
+    const user = await _fetch<APIUser>(`users/${id}`);
+    if ('message' in user) throw new TypeError(user.message);
     return {
       avatar: user.avatar ?
-        `${this.cdn}/avatars/${user.id}/${user.avatar}.png` :
-        `${this.cdn}/embed/avatars/${this.getAvatarIndex(user)}.png`,
+        `${cdn}/avatars/${id}/${user.avatar}.png` :
+        `${cdn}/embed/avatars/${getAvatarIndex(user)}.png`,
       discriminator: user.discriminator,
-      global_name: user.global_name,
-      name: user.username
-    }
+      globalName: user.global_name ?? undefined,
+      username: user.username,
+    };
   }
 
-  private static async getMemberData(id: string): Promise<Pick<UserData, 'role_color'>> {
-    const member = await this.discordFetch<APIGuildMember>(`guilds/${siteConfig.guildId}/members/${id}`);
-    const roles = await this.discordFetch<APIRole[]>(`guilds/${siteConfig.guildId}/roles`);
+  async function getMemberData(id: string): Promise<Pick<IUserSchema, 'color'>> {
+    const member = await _fetch<APIGuildMember>(`guilds/${siteConfig.guildId}/members/${id}`);
+    if ('message' in member) throw new TypeError(member.message);
+    const roles = await _fetch<APIRole[]>(`guilds/${siteConfig.guildId}/roles`);
+    if ('message' in roles) throw new TypeError(roles.message);
     const hoistedRoles = roles.filter(v => member.roles?.includes(v.id) && v.hoist);
     const hoist = hoistedRoles.length ? hoistedRoles.reduce((prev, role) => {
       const pos1 = role.position;
       const pos2 = prev.position;
       return (pos1 === pos2 ? Number(BigInt(role.id) - BigInt(prev.id)) : pos1 - pos2) > 0 ? role : prev;
-    }) : { color: 0xFFFFFF };
-    return { role_color: hoist.color };
+    }) : { color: undefined };
+    return { color: hoist.color };
   }
 
-  private static async discordFetch<T = any>(route: string): Promise<T> {
-    return fetch(`${this.endpoint}/${route}`, {
-      headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
-      next: { revalidate: 2 * 60 * 60 }
-    }).then(v => v.json<T>());
+  export function getAvatarIndex({ id, discriminator }: { id: string, discriminator: string }) {
+    return discriminator === '0' ? Number(BigInt(id) >> 22n) % 6 : Number(discriminator) % 5;
   }
+}
 
-  static readonly endpoint = 'https://discord.com/api/v10';
-  static readonly cdn = 'https://cdn.discordapp.com';
+const endpoint = 'https://discord.com/api/v10';
+const cdn = 'https://cdn.discordapp.com';
+
+async function _fetch<T = any>(route: string) {
+  return fetch(`${endpoint}/${route}`, {
+    headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
+    next: { revalidate: 2 * 60 * 60 }
+  }).then(v => {
+    return v.json<T | { message: string }>();
+  });
 }
