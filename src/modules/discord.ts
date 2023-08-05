@@ -22,15 +22,20 @@ export default class Discord {
 
   set(id: string, data: Partial<UserData>) {
     const cache = this.cache.get(id);
-    const after = cache ? Object.assign(cache, data) : data;
+    const after = cache ? { ...cache, ...data } : data;
     this.cache.set(id, after);
+    console.info(`[${id}] update cache`);
+    console.info(this.cache);
     return after;
   }
 
   static readonly cache = new Discord();
   static async fetch(id: string): Promise<UserData> {
     const cache = this.cache.get(id);
-    if (this.isUserData(cache)) return cache;
+    if (this.isUserData(cache)) {
+      console.info(`[${id}] use cache`);
+      return cache;
+    }
     const userData = { id, ...(await this.getUserData(id)), ...(await this.getMemberData(id)) }
     this.cache.set(id, userData);
     return userData;
@@ -41,12 +46,13 @@ export default class Discord {
   }
 
   private static isUserData(data?: Partial<UserData>): data is UserData {
-    return Boolean(
-      data?.avatar &&
-      data.discriminator &&
-      data.global_name &&
-      data.name &&
-      data.role_color
+    return (
+      typeof data?.avatar === 'string' &&
+      typeof data?.discriminator === 'string' &&
+      typeof data?.global_name === 'string' &&
+      typeof data?.id === 'string' &&
+      typeof data?.name === 'string' &&
+      typeof data?.role_color === 'number'
     );
   }
 
