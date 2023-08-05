@@ -1,72 +1,92 @@
 import { siteConfig } from "@/config/site";
 import { APIGuildMember, APIRole, APIUser } from "discord-api-types/v10";
 
-export const endpoint = 'https://discord.com/api/v10';
-export const cdn = 'https://cdn.discordapp.com';
-
-export function getAvatarIndex(user: APIUser) {
-  return user.discriminator === '0' ?
-    Number(BigInt(user.id) >> 22n) % 6 :
-    Number(user.discriminator) % 5
+export interface UserData {
+  id: string;
+  avatar: string;
+  name: string;
+  global_name: string | null;
+  discriminator: string;
+  role_color: number;
 }
 
-export function getUser(id: string) {
-  return fetch(`${endpoint}/users/${id}`, {
-    headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
-    next: { revalidate: 2 * 60 * 60 },
-  }).then(async (res) => {
-    return await res.json<APIUser>()
-  });
-}
-
-export async function getMember(id: string) {
-  return fetch(`${endpoint}/guilds/${siteConfig.guildId}/members/${id}`, {
-    headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
-    next: { revalidate: 5 * 60 },
-  }).then(async (res) => {
-    return await res.json<APIGuildMember>()
-  });
-}
-
-async function getRoles() {
-  return fetch(`${endpoint}/guilds/${siteConfig.guildId}/roles`, {
-    headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
-    next: { revalidate: 5 * 60 },
-  }).then(async (res) => {
-    return await res.json<APIRole[]>()
-  });
-}
-
-function roleComparePositions(role1: APIRole, role2: APIRole) {
-  const pos1 = role1.position;
-  const pos2 = role2.position;
-
-  if (pos1 === pos2) {
-    return Number(BigInt(role2.id) - BigInt(role1.id));
+export default class Discord {
+  private cache: Map<string, Partial<UserData>>;
+  private constructor() {
+    this.cache = new Map();
   }
 
-  return pos1 - pos2;
-}
+  get(id: string) {
+    return this.cache.get(id);
+  }
 
-export async function getMemberHoistRole(member: APIGuildMember) {
-  const roles = await getRoles();
-  const hoistRoles = roles.filter(v => member.roles.includes(v.id) && v.hoist);
-  if (!hoistRoles.length) return null;
-  return hoistRoles.reduce((prev, role) => roleComparePositions(role, prev) > 0 ? role : prev);
-}
+  set(id: string, data: Partial<UserData>) {
+    const cache = this.cache.get(id);
+    const after = cache ? { ...cache, ...data } : data;
+    this.cache.set(id, after);
+    console.info(`[${id}] update cache`);
+    console.info(this.cache);
+    return after;
+  }
 
+  static readonly cache = new Discord();
+  static async fetch(id: string): Promise<UserData> {
+    const cache = this.cache.get(id);
+    if (this.isUserData(cache)) {
+      console.info(`[${id}] use cache`);
+      return cache;
+    }
+    const userData = { id, ...(await this.getUserData(id)), ...(await this.getMemberData(id)) }
+    this.cache.set(id, userData);
+    return userData;
+  }
 
-export function getDisplayMemberAvatar(member: APIGuildMember) {
-  if (!member.user) return null;
-  return (
-    `${cdn}/guilds/${siteConfig.guildId}/users/${member.user.id}/avatars/${member.avatar}.png` ??
-    getDisplayUserAvatar(member.user)
-  );
-}
+  static getAvatarIndex({ id, discriminator }: Pick<UserData, 'id' | 'discriminator'>) {
+    return discriminator === '0' ? Number(BigInt(id) >> 22n) % 6 : Number(discriminator) % 5;
+  }
 
-export function getDisplayUserAvatar(user: APIUser) {
-  return (
-    (user.avatar && `${cdn}/avatars/${user.id}/${user.avatar}.png`) ??
-    `${cdn}/embed/avatars/${getAvatarIndex(user)}.png`
-  );
+  private static isUserData(data?: Partial<UserData>): data is UserData {
+    return (
+      typeof data?.avatar === 'string' &&
+      typeof data?.discriminator === 'string' &&
+      typeof data?.global_name === 'string' &&
+      typeof data?.id === 'string' &&
+      typeof data?.name === 'string' &&
+      typeof data?.role_color === 'number'
+    );
+  }
+
+  private static async getUserData(id: string): Promise<Pick<UserData, 'avatar' | 'discriminator' | 'global_name' | 'name'>> {
+    const user = await this.discordFetch<APIUser>(`users/${id}`);
+    return {
+      avatar: user.avatar ?
+        `${this.cdn}/avatars/${user.id}/${user.avatar}.png` :
+        `${this.cdn}/embed/avatars/${this.getAvatarIndex(user)}.png`,
+      discriminator: user.discriminator,
+      global_name: user.global_name,
+      name: user.username
+    }
+  }
+
+  private static async getMemberData(id: string): Promise<Pick<UserData, 'role_color'>> {
+    const member = await this.discordFetch<APIGuildMember>(`guilds/${siteConfig.guildId}/members/${id}`);
+    const roles = await this.discordFetch<APIRole[]>(`guilds/${siteConfig.guildId}/roles`);
+    const hoistedRoles = roles.filter(v => member.roles?.includes(v.id) && v.hoist);
+    const hoist = hoistedRoles.length ? hoistedRoles.reduce((prev, role) => {
+      const pos1 = role.position;
+      const pos2 = prev.position;
+      return (pos1 === pos2 ? Number(BigInt(role.id) - BigInt(prev.id)) : pos1 - pos2) > 0 ? role : prev;
+    }) : { color: 0xFFFFFF };
+    return { role_color: hoist.color };
+  }
+
+  private static async discordFetch<T = any>(route: string): Promise<T> {
+    return fetch(`${this.endpoint}/${route}`, {
+      headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
+      next: { revalidate: 2 * 60 * 60 }
+    }).then(v => v.json<T>());
+  }
+
+  static readonly endpoint = 'https://discord.com/api/v10';
+  static readonly cdn = 'https://cdn.discordapp.com';
 }

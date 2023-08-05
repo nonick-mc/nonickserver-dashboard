@@ -1,7 +1,7 @@
 import dbConnect from '@/utils/dbConnext';
 import levelModel from '@/schemas/levelModel';
-import { APIUser } from 'discord-api-types/v10';
-import { cn, wait } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import discord from '@/modules/discord';
 import { getLevelData, getNeedXP } from '@/modules/level';
 import { Progress } from './ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -14,13 +14,7 @@ export async function LeaderBoard({ skip }: { skip: number }) {
   const levelData = await getLevelData({ $skip: skip }, { $limit: 50 });
   const userLevelData = await Promise.all(levelData.map(async (v) => ({
     ...v,
-    user: await fetch(
-      `https://discord.com/api/v10/users/${v.id}`,
-      { headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` }, next: { revalidate: 2 * 60 * 60 }, }
-    ).then(async (res) => {
-      await wait(100);
-      return await res.json<APIUser>()
-    }),
+    user: await discord.fetch(v.id),
   })));
 
   return (
@@ -45,20 +39,20 @@ export async function LeaderBoard({ skip }: { skip: number }) {
             <div className='flex-1 flex flex-col md:flex-row sm:justify-normal md:justify-between md:items-center'>
               <div className='flex gap-4 items-center'>
                 <Avatar className='w-8 h-8'>
-                  <AvatarImage src={user.avatar ? `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.png'}/>
+                  <AvatarImage src={user.avatar}/>
                   <AvatarFallback/>
                 </Avatar>
-                {!user.username ? (
+                {!user.name ? (
                   <p className='font-bold text-sm md:text-base text-muted-foreground'>
                     読み込みに問題が発生しました
                   </p>
                 ) : (
                   <div className='flex flex-col md:flex-row md:gap-2'>
                     <p className='font-bold text-sm md:text-base'>
-                      {user.global_name || user.username}
+                      {user.global_name || user.name}
                     </p>
                     <p className='text-muted-foreground text-sm md:text-base'>
-                      {user.discriminator == '0' ? `@${user.username}` : `#${user.discriminator}`}
+                      {user.discriminator == '0' ? `@${user.name}` : `#${user.discriminator}`}
                     </p>
                   </div>
                 )} 
