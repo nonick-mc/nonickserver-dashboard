@@ -39,7 +39,7 @@ export async function LeaderBoard({ skip }: { skip: number }) {
             <div className='flex-1 flex flex-col md:flex-row sm:justify-normal md:justify-between md:items-center'>
               <div className='flex gap-4 items-center'>
                 <Avatar className='w-8 h-8'>
-                  <AvatarImage src={user.avatar ? `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.png'}/>
+                  <AvatarImage src={user.avatar}/>
                   <AvatarFallback/>
                 </Avatar>
                 {!user.name ? (
