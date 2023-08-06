@@ -1,12 +1,11 @@
 import dbConnect from '@/utils/dbConnext';
 import levelModel from '@/schemas/levelModel';
-import { cn } from '@/lib/utils';
 import { Discord } from '@/modules/discord';
-import { getLevelData, getNeedXP } from '@/modules/level';
-import { Progress } from './ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { FadeUpCard, FadeUpDiv, FadeUpStagger } from './animation';
+import { getLevelData } from '@/modules/level';
+import { FadeUpDiv, FadeUpStagger } from './animation';
 import { PageSelect } from './page-selects';
+import { LevelCard } from './levelCard';
+import { LevelCardWrapper } from './levelCardWrapper';
 
 export async function LeaderBoard({ skip }: { skip: number }) {
   await dbConnect();
@@ -14,7 +13,7 @@ export async function LeaderBoard({ skip }: { skip: number }) {
   const levelData = await getLevelData({ $skip: skip }, { $limit: 50 });
   const userLevelData = await Promise.all(levelData.map(async (v) => ({
     ...v,
-    user: await Discord.fetch(v.id).catch(() => ({ error: true })),
+    user: await Discord.fetch(v.id).catch(() => ({ error: true } as const)),
   })));
 
   return (
@@ -23,53 +22,10 @@ export async function LeaderBoard({ skip }: { skip: number }) {
         <PageSelect size={modelSize} />
       </FadeUpDiv>
       <div className='flex flex-col gap-4'>
-        {userLevelData.map(({ id, xp, lv, rank, user }, index) => (
-          <FadeUpCard
-            className='px-6 py-4 flex gap-4 items-center'
-            key={index}
-          >
-            <div
-              className={cn(
-                'flex w-8 h-8 rounded-full text-xl items-center justify-center font-black select-none',
-                rank <= 3 ? 'bg-foreground text-background' : rank <= 10 ? 'bg-muted text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {rank}
-            </div>
-            <div className='flex-1 flex flex-col md:flex-row sm:justify-normal md:justify-between md:items-center'>
-              {'error' in user || !user.avatar ? (
-                <div className='flex gap-4 items-center'>
-                  <Avatar className='w-8 h-8'>
-                    <AvatarFallback />
-                  </Avatar>
-                  <p className='font-bold text-sm md:text-base text-muted-foreground'>
-                    読み込みに問題が発生しました
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className='flex gap-4 items-center'>
-                    <Avatar className='w-8 h-8'>
-                      <AvatarImage src={user.avatar} />
-                      <AvatarFallback />
-                    </Avatar>
-                    <div className='flex flex-col md:flex-row md:gap-2'>
-                      <p className={`font-bold text-sm md:text-base`}>
-                        {user.globalName || user.username}
-                      </p>
-                      <p className='text-muted-foreground text-sm md:text-base'>
-                        {user.discriminator == '0' ? `@${user.username}` : `#${user.discriminator}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='flex items-center md:flex-col md:items-end gap-2'>
-                    <p className='text-muted-foreground'>Lv.<span className='text-foreground font-extrabold'>{lv}</span></p>
-                    <Progress className='flex-1 md:flex-none md:w-40 h-1' value={Math.floor((xp / getNeedXP(lv)) * 100)}/>
-                  </div>
-                </>
-              )}
-            </div>
-          </FadeUpCard>
+        {userLevelData.map(({ id, xp, lv, rank, boost, last, user }, index) => (
+          <LevelCardWrapper index={index} isAdmin={false}>
+            <LevelCard data={{ boost, id, last, lv, rank, xp }} user={user} />
+          </LevelCardWrapper>
         ))}
       </div>
       {/* <FadeUpDiv className='flex justify-end'>
