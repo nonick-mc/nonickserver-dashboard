@@ -1,10 +1,10 @@
 import { ImageResponse, NextResponse } from 'next/server';
 import { getLevelData, getNeedXP } from '@/modules/level';
 import dbConnect from '@/utils/dbConnext';
-import discord from '@/modules/discord';
-import { siteConfig } from '@/config/site';
+import { Discord } from '@/modules/discord';
 
-const MPlus = await fetch(`${siteConfig.metadata.url}/rank/MPLUS-1P-BOLD.ttf`).then(v => v.arrayBuffer());
+const MPlusJP = await fetch(`https://mplus-fonts.osdn.jp/webfonts/general-j/mplus-2-bold-sub.ttf`).then(v => v.arrayBuffer());
+const MPlusEn = await fetch(`https://mplus-fonts.osdn.jp/webfonts/basic_latin/mplus-2c-bold-sub.ttf`).then(v => v.arrayBuffer());
 
 function siUnit(num: number, method: (n: number) => number = Math.floor) {
   if (num <= 0) return String(num);
@@ -14,21 +14,22 @@ function siUnit(num: number, method: (n: number) => number = Math.floor) {
   return `${res}${units[i - 1] ?? ''}`;
 }
 
-export async function GET(_: any, { params: { id } }: { params: { id: string } }) {
+export async function GET(req: Request, { params: { id } }: { params: { id: string } }) {
+  const { protocol, host } = new URL(req.url);
   await dbConnect();
   const data = (await getLevelData()).find(v => v.id === id);
   if (!data) return NextResponse.json({ message: 'data not found' }, { status: 404 });
 
-  const user = await discord.fetch(data.id);
+  const user = await Discord.fetch(data.id);
   const need = getNeedXP(data.lv);
 
   return new ImageResponse(
     (
       <div style={{
         display: 'flex', width: '100%', height: '100%',
-        color: '#fff', fontFamily: 'MPlus',
+        color: '#fff', fontFamily: 'MPlusJP, MPlusEn',
       }}>
-        <img src={`${siteConfig.metadata.url}/rank/${discord.getAvatarIndex(user)}.png`} style={{ width: '100%', height: '100%' }} />
+        <img src={`${protocol}//${host}/rank/${Discord.getAvatarIndex(user)}.png`} style={{ width: '100%', height: '100%' }} />
         <div style={{ position: 'absolute', top: '50%', width: '100%', height: '50%', backgroundColor: '#1b1b1f' }} />
         <img src={user.avatar} style={{
           position: 'absolute', left: '25px', top: '55px',
@@ -39,7 +40,7 @@ export async function GET(_: any, { params: { id } }: { params: { id: string } }
           position: 'absolute', left: '240px', bottom: '100px', fontSize: `28px`,
           width: '475px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
         }}>
-          {user.global_name || user.name}
+          {user.globalName || user.username}
         </span>
         <div style={{
           position: 'absolute', left: '25px', bottom: '18px', width: '200px',
@@ -59,7 +60,7 @@ export async function GET(_: any, { params: { id } }: { params: { id: string } }
           position: 'absolute', left: '230px', bottom: '60px',
           backgroundColor: '#454952', borderRadius: '35px', border: '5px #232529',
         }}>
-          <div style={{ width: `${(data.xp / need) * 100}%`, borderRadius: '25px', backgroundColor: `#${user.role_color.toString(16).padStart(6, '0')}` }} />
+          <div style={{ width: `${(data.xp / need) * 100}%`, borderRadius: '25px', backgroundColor: `#${(user.color ?? 0xFFFFFF).toString(16).padStart(6, '0')}` }} />
         </div>
       </div>
     ),
@@ -67,7 +68,8 @@ export async function GET(_: any, { params: { id } }: { params: { id: string } }
       width: 750,
       height: 300,
       fonts: [
-        { name: 'MPlus', data: MPlus }
+        { name: 'MPlusJP', data: MPlusJP },
+        { name: 'MPlusEn', data: MPlusEn }
       ]
     }
   );
