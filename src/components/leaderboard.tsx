@@ -23,7 +23,7 @@ export async function LeaderBoard({ skip }: { skip: number }) {
       </FadeUpDiv>
       <div className='flex flex-col gap-4'>
         {userLevelData.map(({ id, xp, lv, rank, boost, last, user }, index) => (
-          <LevelCardWrapper index={index} isAdmin={false}>
+          <LevelCardWrapper index={index} isAdmin={false} key={index}>
             <LevelCard data={{ boost, id, last, lv, rank, xp }} user={user} />
           </LevelCardWrapper>
         ))}
