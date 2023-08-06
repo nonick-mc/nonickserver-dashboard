@@ -13,7 +13,7 @@ export namespace Discord {
     if (!doc.color) {
       const memberData = await getMemberData(id).catch(console.error);
       if (memberData) {
-        doc.color = memberData.color;
+        doc.color = memberData.color ?? 0xFFFFFF;
       }
     }
     if (!(
