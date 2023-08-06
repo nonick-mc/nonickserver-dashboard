@@ -2,6 +2,8 @@ import { siteConfig } from "@/config/site";
 import userModel, { IUserSchema } from "@/schemas/userModel";
 import { APIGuildMember, APIRole, APIUser } from "discord-api-types/v10";
 
+const sortedRoles: APIRole[] = [];
+
 export namespace Discord {
   export async function fetch(id: string): Promise<IUserSchema> {
     const doc = await userModel.findOne({ id });
@@ -59,15 +61,17 @@ export namespace Discord {
   async function getMemberData(id: string): Promise<Pick<IUserSchema, 'color'>> {
     const member = await _fetch<APIGuildMember>(`guilds/${siteConfig.guildId}/members/${id}`);
     if ('message' in member) throw new TypeError(member.message);
-    const roles = await _fetch<APIRole[]>(`guilds/${siteConfig.guildId}/roles`);
-    if ('message' in roles) throw new TypeError(roles.message);
-    const hoistedRoles = roles.filter(v => member.roles?.includes(v.id) && v.hoist);
-    const hoist = hoistedRoles.length ? hoistedRoles.reduce((prev, role) => {
-      const pos1 = role.position;
-      const pos2 = prev.position;
-      return (pos1 === pos2 ? Number(BigInt(role.id) - BigInt(prev.id)) : pos1 - pos2) > 0 ? role : prev;
-    }) : { color: undefined };
-    return { color: hoist.color };
+    if (!sortedRoles.length) {
+      const roles = await _fetch<APIRole[]>(`guilds/${siteConfig.guildId}/roles`);
+      if ('message' in roles) throw new TypeError(roles.message);
+      sortedRoles.push(...roles.sort((prev, role) => {
+        const pos1 = role.position;
+        const pos2 = prev.position;
+        return pos1 === pos2 ? Number(BigInt(role.id) - BigInt(prev.id)) : pos1 - pos2;
+      }))
+    }
+    const { color } = sortedRoles.filter(role => role.color).find(role => member.roles.includes(role.id)) ?? {};
+    return { color };
   }
 
   export function getAvatarIndex({ id, discriminator }: { id: string, discriminator: string }) {
