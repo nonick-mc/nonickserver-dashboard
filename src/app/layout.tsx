@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Noto_Sans_JP } from 'next/font/google'
 import { siteConfig } from '@/config/site'
 import { NextAuthProvider } from '@/components/session-provider'
+import { CheckSessionProvider } from './auth-provider'
 
 const notoSans = Noto_Sans_JP({ subsets: ['latin'] })
 
@@ -23,14 +24,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body className={notoSans.className}>
         <NextAuthProvider>
-          <AnimationProvider>
-            <ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
-              {children}
-            </ThemeProvider>
-          </AnimationProvider>
+          <CheckSessionProvider>
+            <AnimationProvider>
+              <ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
+                {children}
+              </ThemeProvider>
+            </AnimationProvider>
+          </CheckSessionProvider>
         </NextAuthProvider>
       </body>
     </html>
