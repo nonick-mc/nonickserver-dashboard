@@ -2,7 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Noto_Sans_JP } from 'next/font/google';
 import { Nav } from '@/components/nav';
-import { Providers } from './provider';
+import { Providers } from './providers';
+import { cn } from '@/lib/utils';
 
 const notoSans = Noto_Sans_JP({ subsets: ['latin'] });
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     default: siteName,
     template: `%s - ${siteName}`,
   },
-  description: 'Discordサーバー「NoNICK SERVER」公式サイト'
+  description: 'Discordサーバー「NoNICK SERVER」公式サイト',
 };
 
 export default function RootLayout({
@@ -22,13 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <body className={notoSans.className}>
+    <html lang='ja'>
+      <body className={cn(notoSans.className, 'h-screen')}>
         <Providers>
-          <main className='container max-w-screen-lg h-screen'>
+          <div className='flex flex-col w-screen h-screen'>
             <Nav />
-            {children}
-          </main>
+            <main className='overflow-auto grow'>{children}</main>
+          </div>
         </Providers>
       </body>
     </html>

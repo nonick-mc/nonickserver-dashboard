@@ -19,3 +19,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  :root {
+    --nextui-divider: 240 10% 3.9%;
+  }
+
+  .dark {
+    --nextui-divider: 0 0% 98%;
+  }
+}

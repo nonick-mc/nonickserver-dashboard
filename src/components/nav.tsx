@@ -1,14 +1,30 @@
-import { Link } from '@nextui-org/react';
+import {
+  Link,
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+} from '@nextui-org/react';
+import { ToggleTheme } from './toggleTheme';
+import { LoginButton } from './loginButton';
+import { Logo } from './logo';
 
 export function Nav() {
   return (
-    <div className=' flex h-20 items-center justify-between gap-4 bg-background sm:gap-0'>
-      <div className='flex items-center gap-3'>
+    <Navbar isBordered>
+      <NavbarBrand>
         <Link href='/'>
-          <div className='font-bold text-xl'>NoNICK SERVER</div>
+          <Logo width={140} />
         </Link>
-      </div>
-      <div>Login</div>
-    </div>
+      </NavbarBrand>
+      <NavbarContent justify='end'>
+        <NavbarItem>
+          <ToggleTheme />
+        </NavbarItem>
+        <NavbarItem>
+          <LoginButton />
+        </NavbarItem>
+      </NavbarContent>
+    </Navbar>
   );
 }
