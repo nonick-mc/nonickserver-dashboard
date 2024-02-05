@@ -28,7 +28,7 @@ export default function RootLayout({
         <Providers>
           <div className='flex flex-col w-screen h-screen'>
             <Nav />
-            <main className='overflow-auto grow'>{children}</main>
+            <main className='overflow-auto grow max-w-screen-lg w-full mx-auto px-6 pt-4'>{children}</main>
           </div>
         </Providers>
       </body>
