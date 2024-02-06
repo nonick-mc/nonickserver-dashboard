@@ -23,7 +23,7 @@ export function LevelCard({ data, user }: LevelCardProps) {
   return (
     <Card
       radius='sm'
-      className='px-6 py-4 flex flex-row gap-4 items-center justify-between bg-background border-muted border-1'
+      className='px-6 py-4 flex flex-col md:flex-row gap-4 md:items-center justify-between bg-background border-muted border-1'
     >
       <div className='flex gap-4 items-center'>
         <div
@@ -40,7 +40,10 @@ export function LevelCard({ data, user }: LevelCardProps) {
         </div>
         {'error' in user ? (
           <div className='flex gap-4 items-center'>
-            <Avatar src='https://cdn.discordapp.com/embed/avatars/0.png' className='w-8 h-8' />
+            <Avatar
+              src='https://cdn.discordapp.com/embed/avatars/0.png'
+              className='w-8 h-8'
+            />
             <p className='font-bold text-sm md:text-base text-muted-foreground'>
               読み込みに問題が発生しました
             </p>
@@ -61,7 +64,7 @@ export function LevelCard({ data, user }: LevelCardProps) {
           </>
         )}
       </div>
-      <div className='flex items-center md:flex-col md:items-end gap-2'>
+      <div className='flex items-center md:flex-col md:items-end gap-2 w-full md:w-40'>
         <p className='text-muted-foreground'>
           Lv.<span className='text-foreground font-extrabold'>{data.lv}</span>
         </p>
@@ -70,7 +73,6 @@ export function LevelCard({ data, user }: LevelCardProps) {
             value={data.xp}
             maxValue={needXP}
             size='sm'
-            className='flex-1 md:flex-none md:w-40 h-1'
             aria-label='xp'
           />
         </Tooltip>
