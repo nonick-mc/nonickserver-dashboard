@@ -1,4 +1,7 @@
 import { LevelCard } from '@/components/levelCard';
+import { Discord } from '@/modules/discord';
+import { getLevelData } from '@/modules/level';
+import dbConnect from '@/util/dbConnect';
 import { Image } from '@nextui-org/react';
 import type { Metadata } from 'next';
 
@@ -6,7 +9,10 @@ export const metadata: Metadata = {
   title: 'リーダーボード',
 };
 
-export default function Page() {
+export default async function Page() {
+  await dbConnect();
+  // const levels = await getLevelData({ $skip: 0 }, { $limit: 50 });
+  // console.info(levels);
   return (
     <>
       <div className='flex flex-col gap-6 text-center justify-center'>
@@ -23,14 +29,8 @@ export default function Page() {
       <div className='my-12 mx-auto flex flex-col gap-12'>
         <h3 className='font-black text-2xl'>あなたの順位</h3>
         <LevelCard
-          data={{ lv: 71, xp: 23850 }}
-          user={{
-            avatar:
-              'https://cdn.discordapp.com/avatars/695420898961784913/aa655d4b7389085f4ec4c95150da407a.png',
-            discriminator: '0',
-            globalName: 'akki256.',
-            username: 'akki0256',
-          }}
+          data={{ rank: 4, lv: 71, xp: 23850 }}
+          user={await Discord.getUserData('695420898961784913')}
         />
       </div>
     </>

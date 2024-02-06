@@ -1,40 +1,79 @@
+import { cn } from '@/lib/utils';
 import { getNeedXP } from '@/modules/level';
-import { Avatar, Card, Progress } from '@nextui-org/react';
+import { Avatar, Card, Progress, Tooltip } from '@nextui-org/react';
 
 interface LevelCardProps {
   data: {
+    rank: number;
     lv: number;
     xp: number;
   };
-  user: {
-    avatar: string;
-    globalName: string;
-    username: string;
-    discriminator: string;
-  };
+  user:
+    | {
+        avatar: string;
+        globalName: string | undefined;
+        username: string;
+        discriminator: string;
+      }
+    | { error: string };
 }
 
 export function LevelCard({ data, user }: LevelCardProps) {
+  const needXP = getNeedXP(data.lv);
   return (
-    <Card radius='sm' className='px-6 py-4 flex flex-row gap-4 items-center justify-between bg-background border-muted border-1'>
+    <Card
+      radius='sm'
+      className='px-6 py-4 flex flex-row gap-4 items-center justify-between bg-background border-muted border-1'
+    >
       <div className='flex gap-4 items-center'>
-        <Avatar src={user.avatar} className='w-8 h-8' />
-        <div className='flex flex-col md:flex-row md:gap-2'>
-          <p className='font-bold text-sm md:text-base'>
-            {user.globalName || user.username}
-          </p>
-          <p className='text-muted-foreground text-sm md:text-base'>
-            {user.discriminator === '0'
-              ? `@${user.username}`
-              : `#${user.discriminator}`}
-          </p>
+        <div
+          className={cn(
+            'flex w-8 h-8 rounded-full text-xl items-center justify-center font-black select-none',
+            data.rank <= 3
+              ? 'bg-foreground text-background'
+              : data.rank <= 10
+                ? 'bg-muted text-foreground'
+                : 'text-muted-foreground',
+          )}
+        >
+          {data.rank}
         </div>
+        {'error' in user ? (
+          <div className='flex gap-4 items-center'>
+            <Avatar src='https://cdn.discordapp.com/embed/avatars/0.png' className='w-8 h-8' />
+            <p className='font-bold text-sm md:text-base text-muted-foreground'>
+              読み込みに問題が発生しました
+            </p>
+          </div>
+        ) : (
+          <>
+            <Avatar src={user.avatar} className='w-8 h-8' />
+            <div className='flex flex-col md:flex-row md:gap-2'>
+              <p className='font-bold text-sm md:text-base'>
+                {user.globalName || user.username}
+              </p>
+              <p className='text-muted-foreground text-sm md:text-base'>
+                {user.discriminator === '0'
+                  ? `@${user.username}`
+                  : `#${user.discriminator}`}
+              </p>
+            </div>
+          </>
+        )}
       </div>
       <div className='flex items-center md:flex-col md:items-end gap-2'>
         <p className='text-muted-foreground'>
           Lv.<span className='text-foreground font-extrabold'>{data.lv}</span>
         </p>
-        <Progress value={data.xp} maxValue={getNeedXP(data.lv)} size='sm' className='flex-1 md:flex-none md:w-40 h-1'/>
+        <Tooltip content={`${data.xp} / ${needXP}`} placement='bottom'>
+          <Progress
+            value={data.xp}
+            maxValue={needXP}
+            size='sm'
+            className='flex-1 md:flex-none md:w-40 h-1'
+            aria-label='xp'
+          />
+        </Tooltip>
       </div>
     </Card>
   );
