@@ -22,6 +22,7 @@ export function LevelCard({ data, user }: LevelCardProps) {
   const needXP = getNeedXP(data.lv);
   return (
     <Card
+      shadow='none'
       radius='sm'
       className='px-6 py-4 flex flex-col md:flex-row gap-4 md:items-center justify-between bg-background border-muted border-1'
     >
