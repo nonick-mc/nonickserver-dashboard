@@ -1,4 +1,4 @@
-import levelModel, { ILevelSchema } from '@/database/models/levelModel';
+import levelModel, { ILevelSchema } from '@/models/levelModel';
 import { PipelineStage } from 'mongoose';
 
 export function getNeedXP(lv: number) {
