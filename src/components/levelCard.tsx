@@ -8,8 +8,8 @@ export async function LevelCard({
   wait: i = 0,
 }: { data: LevelData; wait?: number }) {
   const needXP = getNeedXP(data.lv);
-  const user = await getUserData(data.id);
   await wait(i);
+  const user = await getUserData(data.id).catch((e) => ({ error: e }));
   return (
     <Card
       shadow='none'
