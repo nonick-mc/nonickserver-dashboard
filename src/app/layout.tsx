@@ -24,11 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='ja'>
-      <body className={cn(notoSans.className, 'h-screen')}>
+      <body className={cn(notoSans.className, 'min-h-screen')}>
         <Providers>
-          <div className='flex flex-col w-screen h-screen'>
+          <div className='flex flex-col w-screen'>
             <Nav />
-            <main className='overflow-auto grow max-w-screen-lg w-full mx-auto px-6 pt-4'>
+            <main className='grow max-w-screen-lg w-full mx-auto px-6 pt-4'>
               {children}
             </main>
           </div>

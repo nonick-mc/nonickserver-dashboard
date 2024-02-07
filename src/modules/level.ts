@@ -1,22 +1,16 @@
-import levelModel from '@/database/models/levelModel';
-import { Model, PipelineStage } from 'mongoose';
+import levelModel, { ILevelSchema } from '@/database/models/levelModel';
+import { PipelineStage } from 'mongoose';
 
 export function getNeedXP(lv: number) {
   return 5 * lv ** 2 + 50 * lv + 100;
 }
 
-export type LevelData = {
-  id: string;
-  lv: number;
-  xp: number;
-  boost: number;
-  last: Date;
+export interface LevelData extends ILevelSchema {
   rank: number;
-};
-export async function getLevelData(
-  ...pipeline: PipelineStage[]
-): Promise<(LevelData & { rank: number })[]> {
-  return (await levelModel.aggregate([
+}
+
+export async function getLevelData(...pipeline: PipelineStage[]) {
+  return levelModel.aggregate<LevelData>([
     { $addFields: { score: { lv: '$lv', xp: '$xp' } } },
     {
       $setWindowFields: {
@@ -26,7 +20,5 @@ export async function getLevelData(
     },
     { $project: { score: 0, _id: 0 } },
     ...pipeline,
-  ])) as (typeof levelModel extends Model<infer U>
-    ? U & { rank: number }
-    : never)[];
+  ]);
 }

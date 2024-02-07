@@ -1,7 +1,7 @@
 import nextAuth, { AuthOptions } from 'next-auth';
 import DiscordProvider from 'next-auth/providers/discord';
 
-const authOption: AuthOptions = {
+export const authOption: AuthOptions = {
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID,
@@ -10,10 +10,14 @@ const authOption: AuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ account, token }) {
+    async jwt({ account, token, user }) {
       if (account) {
         token.accessToken = account.access_token;
         token.accessTokenExpires = account.expires_at;
+      }
+
+      if (user) {
+        token.id = user.id;
       }
 
       if (
@@ -25,10 +29,16 @@ const authOption: AuthOptions = {
 
       return token;
     },
-    async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.error = token.error;
-      return session;
+    session({ session, token }) {
+      return {
+        ...session,
+        accessToken: token.accessToken,
+        error: token.error,
+        user: {
+          ...session.user,
+          id: token.id,
+        },
+      };
     },
   },
 };

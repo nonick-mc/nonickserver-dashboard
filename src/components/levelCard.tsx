@@ -1,25 +1,21 @@
 import { cn } from '@/lib/utils';
-import { getNeedXP } from '@/modules/level';
+import { UserData, getUserData } from '@/modules/discord';
+import { LevelData, getNeedXP } from '@/modules/level';
 import { Avatar, Card, Progress, Tooltip } from '@nextui-org/react';
+import { wait } from '@/lib/utils';
 
-interface LevelCardProps {
+export interface LevelCardProps {
   data: {
     rank: number;
     lv: number;
     xp: number;
   };
-  user:
-    | {
-        avatar: string;
-        globalName: string | undefined;
-        username: string;
-        discriminator: string;
-      }
-    | { error: string };
+  user: UserData | { error: string };
 }
 
-export function LevelCard({ data, user }: LevelCardProps) {
+export async function LevelCard({ data }: { data: LevelData }) {
   const needXP = getNeedXP(data.lv);
+  const user = await getUserData(data.id);
   return (
     <Card
       shadow='none'
@@ -75,6 +71,9 @@ export function LevelCard({ data, user }: LevelCardProps) {
             maxValue={needXP}
             size='sm'
             aria-label='xp'
+            classNames={{
+              indicator: '!bg-foreground'
+            }}
           />
         </Tooltip>
       </div>
