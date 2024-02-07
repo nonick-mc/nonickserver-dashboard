@@ -1,3 +1,4 @@
+import { wait } from '@/lib/utils';
 import { APIUser } from 'discord-api-types/v10';
 
 export interface UserData {
@@ -31,11 +32,20 @@ export function getAvatarIndex({
 const endpoint = 'https://discord.com/api/v10';
 const cdn = 'https://cdn.discordapp.com';
 
-async function _fetch<T = unknown>(route: string) {
+async function _fetch<T = unknown>(
+  route: string,
+): Promise<T | { message: string }> {
   return fetch(`${endpoint}/${route}`, {
     headers: { Authorization: `Bot ${process.env.DISCORD_CLIENT_TOKEN}` },
     next: { revalidate: 2 * 60 * 60 },
-  }).then((v) => {
+  }).then(async (v) => {
+    if (v.status === 429) {
+      const retryAfter = parseFloat(
+        v.headers.get('x-ratelimit-reset-after') || '0',
+      );
+      await wait(retryAfter * 1000);
+      return _fetch<T>(route);
+    }
     return v.json<T | { message: string }>();
   });
 }
