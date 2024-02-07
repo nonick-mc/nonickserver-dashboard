@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang='ja'>
       <body className={cn(notoSans.className, 'min-h-screen')}>
         <Providers>
-          <div className='flex flex-col w-screen'>
+          <div className='flex flex-col'>
             <Nav />
             <main className='grow max-w-screen-lg w-full mx-auto px-6 pt-4'>
               {children}
